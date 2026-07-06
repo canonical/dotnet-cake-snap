@@ -5,8 +5,11 @@ name: CI snap
 # Steps:
 #   1. Builds the snap (latest stable Cake release) on amd64 + arm64.
 #   2. Installs it locally (--dangerous) and runs the integration tests in tests/.
-#   3. On push to main (e.g. PR merge): publishes to the edge channel.
-#      On PRs: builds + tests + uploads the artifact only; never publishes.
+#   3. Uploads the snap artifact for inspection (never publishes to the store).
+#
+# The edge channel is maintained exclusively by build-edge-snap.yml (daily),
+# which tracks the upstream develop branch. This workflow only validates
+# changes to the snap packaging itself.
 #
 # Complements the scheduled workflows:
 #   - build-stable-snap.yml : tracks new upstream Cake releases  -> stable
@@ -65,12 +68,3 @@ jobs:
         working-directory: tests
         run: |
           dotnet-cake build.cake --target=Full --verbosity=Diagnostic
-
-      - name: Publish to edge
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: canonical/action-publish@v1
-        env:
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
-        with:
-          snap: ${{ steps.snapcraft.outputs.snap }}
-          release: edge
