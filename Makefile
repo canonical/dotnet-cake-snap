@@ -29,6 +29,8 @@ build: fetch-version generate-snapcraft pack
 fetch-version:
 ifeq ($(VERSION),)
 	@echo "Fetching latest Cake release from GitHub..."
+	@command -v curl >/dev/null 2>&1 || { echo "Error: curl is required to fetch the latest Cake version" >&2; exit 1; }
+	@command -v jq >/dev/null 2>&1 || { echo "Error: jq is required to parse the GitHub API response" >&2; exit 1; }
 	$(eval VERSION := $(shell curl -s https://api.github.com/repos/cake-build/cake/releases/latest | jq -r '.tag_name' | sed 's/^v//'))
 	@if [ -z "$(VERSION)" ]; then \
 		echo "Error: could not fetch latest Cake version from GitHub" >&2; \

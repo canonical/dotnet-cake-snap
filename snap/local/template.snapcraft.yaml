@@ -1,7 +1,7 @@
 name: dotnet-cake
 base: core24
 version: '{{VERSION}}'
-summary: Cake (C# Make) is a cross platform build automation system. 
+summary: Cake (C# Make) is a cross platform build automation system.
 description: |
   Cake (C# Make) is a cross-platform build automation system with a C# DSL
   for tasks such as compiling code, copying files and folders, running unit
