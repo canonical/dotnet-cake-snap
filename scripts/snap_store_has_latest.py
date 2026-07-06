@@ -3,9 +3,8 @@
 Check if the Snap Store version of dotnet-cake matches the latest upstream
 Cake version for a given channel.
 
-  --channel stable  : compares against the latest GitHub release tag of
-                      cake-build/cake (e.g. "6.2.0").
-  --channel edge    : compares against the latest commit SHA (7 chars) on the
+  --channel stable  : compares against the latest GitHub release tag of cake-build/cake (e.g. "6.2.0").
+  --channel edge    : compares against the latest commit SHA (7 chars) on the upstream develop branch.
 """
 
 import sys
@@ -30,7 +29,7 @@ def get_github_latest_release(token=None):
         request = urllib.request.Request(url)
         if token:
             request.add_header("Authorization", f"Bearer {token}")
-        with urllib.request.urlopen(request) as response:
+        with urllib.request.urlopen(request, timeout=10) as response:
             data = json.loads(response.read().decode())
             tag = data.get("tag_name", "").strip()
             return tag[1:] if tag.startswith("v") else tag
@@ -46,7 +45,7 @@ def get_github_latest_commit(token=None):
         request = urllib.request.Request(url)
         if token:
             request.add_header("Authorization", f"Bearer {token}")
-        with urllib.request.urlopen(request) as response:
+        with urllib.request.urlopen(request, timeout=10) as response:
             data = json.loads(response.read().decode())
             # Short SHA (7 chars) to match the snap version format used for edge.
             return data.get("sha", "")[:7]
@@ -64,12 +63,16 @@ class UnixSocketHTTPConnection(http.client.HTTPConnection):
 
     def connect(self):
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.sock.settimeout(10)
         self.sock.connect(self.socket_path)
 
 
 def get_snap_store_version(channel):
     """Fetch the current version from the Snap Store via the snapd API."""
     socket_path = "/run/snapd.socket"
+    if not os.path.exists(socket_path):
+        print(f"Error: snapd socket not found at {socket_path}. Is snapd running?", file=sys.stderr)
+        return None
     try:
         conn = UnixSocketHTTPConnection(socket_path)
         conn.request("GET", f"/v2/find?name={SNAP_NAME}")

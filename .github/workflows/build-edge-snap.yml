@@ -57,6 +57,10 @@ jobs:
         run: |
           LATEST_COMMIT=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
             https://api.github.com/repos/cake-build/cake/commits/develop | jq -r '.sha[:7]')
+          if [ -z "$LATEST_COMMIT" ] || [ "$LATEST_COMMIT" = "null" ]; then
+            echo "Failed to fetch latest develop commit SHA from GitHub." >&2
+            exit 1
+          fi
           echo "commit=$LATEST_COMMIT" >> "$GITHUB_OUTPUT"
           echo "Building from upstream develop branch, commit: $LATEST_COMMIT"
 
