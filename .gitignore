@@ -1,0 +1,22 @@
+# Snapcraft build artifacts
+*.snap
+parts/
+stage/
+prime/
+*.snapcraft
+
+# makefile artifacts
+snap/snapcraft.yaml
+
+# .NET / Cake artifacts (integration test fixture)
+bin/
+obj/
+tools/
+artifacts/
+_scratch/
+*.zip
+
+# Editor / OS files
+*~
+*.swp
+.DS_Store

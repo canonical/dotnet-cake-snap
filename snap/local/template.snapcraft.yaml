@@ -1,0 +1,120 @@
+name: dotnet-cake
+base: core24
+version: '{{VERSION}}'
+summary: Cake (C# Make) is a cross platform build automation system. 
+description: |
+  Cake (C# Make) is a cross-platform build automation system with a C# DSL
+  for tasks such as compiling code, copying files and folders, running unit
+  tests, compressing files and building NuGet packages.
+
+  This snap exposes the Cake .NET tool as the `dotnet-cake` command, matching
+  the upstream tool command name. It does not include Cake Frosting or the
+  Cake SDK.
+title: Cake (C# Make)
+contact: https://github.com/cake-build/cake
+license: MIT
+issues: https://github.com/cake-build/cake/issues/new
+source-code:
+  - https://github.com/cake-build/cake
+  - https://github.com/canonical/dotnet-cake-snap
+website: https://cakebuild.net
+
+grade: {{GRADE}}
+confinement: {{CONFINEMENT}}
+
+platforms:
+  amd64:
+  arm64:
+
+apps:
+  dotnet-cake:
+    command: dotnet-cake
+    environment:
+      DOTNET_ROOT: $SNAP/usr/lib/dotnet
+      DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+      DOTNET_NOLOGO: "true"
+      LD_LIBRARY_PATH: $SNAP/usr/lib/x86_64-linux-gnu:$SNAP/usr/lib/aarch64-linux-gnu:$SNAP/usr/lib:$SNAP/lib
+      PATH: $SNAP/usr/lib/dotnet:$SNAP/usr/bin:$PATH
+
+parts:
+  dotnet-cake:
+    plugin: dotnet
+    source: https://github.com/cake-build/cake.git
+    source-type: git
+    source-tag: v{{VERSION}}
+    dotnet-project: src/Cake/Cake.csproj
+    dotnet-configuration: "Release"
+    dotnet-self-contained: false
+    dotnet-verbosity: "minimal"
+    dotnet-version: "10.0"
+    dotnet-properties:
+      TargetFramework: net10.0
+
+    build-attributes:
+      - enable-patchelf
+
+    stage-packages:
+      - libicu74
+      - dotnet-sdk-10.0
+
+    override-pull: |
+      craftctl default
+
+      # Relax the exact SDK pin in global.json to accept any installed .NET 10 SDK.
+      if [ -f global.json ]; then
+        sed -i -E 's/"version": "10\.0\.[0-9]+"/"version": "10.0.0"/' global.json
+        sed -i -E 's/"rollForward": "[a-zA-Z]+"/"rollForward": "latestFeature"/' global.json
+      fi
+
+      # Stamp the version into SolutionInfo.cs; else `--version`/`--info` report "Unknown".
+      if [ -f src/SolutionInfo.cs ]; then
+        CAKE_VERSION="{{VERSION}}"
+        CAKE_BRANCH="{{BRANCH}}"
+        CAKE_SHA="$(git rev-parse HEAD 2>/dev/null || true)"
+
+        # AssemblyVersion/FileVersion require a numeric x.y.z.w form. For edge
+        # builds the snap version is a commit SHA (non-numeric), so fall back to
+        # 0.0.0.0 to keep the build valid while Description/Informational carry
+        # the real (SHA-based) version for `--version`/`--info`.
+        if echo "$CAKE_VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+          CAKE_ASM_VERSION="${CAKE_VERSION}.0"
+        else
+          CAKE_ASM_VERSION="0.0.0.0"
+        fi
+
+        # `--info` Details: mirror upstream's GitVersion format when git is available.
+        if [ -n "$CAKE_SHA" ]; then
+          CAKE_INFORMATIONAL="${CAKE_VERSION}+Branch.${CAKE_BRANCH}.Sha.${CAKE_SHA}"
+        else
+          CAKE_INFORMATIONAL="${CAKE_VERSION}"
+        fi
+
+        sed -i -E "s/AssemblyVersion\(\"[^\"]*\"\)/AssemblyVersion(\"${CAKE_ASM_VERSION}\")/" src/SolutionInfo.cs
+        sed -i -E "s/AssemblyFileVersion\(\"[^\"]*\"\)/AssemblyFileVersion(\"${CAKE_ASM_VERSION}\")/" src/SolutionInfo.cs
+        sed -i -E "s/AssemblyInformationalVersion\(\"[^\"]*\"\)/AssemblyInformationalVersion(\"${CAKE_INFORMATIONAL}\")/" src/SolutionInfo.cs
+
+        # AssemblyDescription drives `--version` (via Comments); keep it clean.
+        if grep -q 'AssemblyDescription' src/SolutionInfo.cs; then
+          sed -i -E "s/AssemblyDescription\(\"[^\"]*\"\)/AssemblyDescription(\"${CAKE_VERSION}\")/" src/SolutionInfo.cs
+        else
+          echo "[assembly: System.Reflection.AssemblyDescription(\"${CAKE_VERSION}\")]" >> src/SolutionInfo.cs
+        fi
+      fi
+
+    override-build: |
+      set -eux
+
+      craftctl default
+
+      # Rename the apphost "Cake" (AssemblyName) to the upstream command "dotnet-cake".
+      if [ -f "$CRAFT_PART_INSTALL/Cake" ]; then
+        mv "$CRAFT_PART_INSTALL/Cake" "$CRAFT_PART_INSTALL/dotnet-cake"
+        chmod +x "$CRAFT_PART_INSTALL/dotnet-cake"
+      fi
+
+lint:
+  ignore:
+    - library:
+        - usr/lib/**/libicu*
+        - usr/lib/**/liblttng-ust*
+        - usr/lib/**/libunwind*
