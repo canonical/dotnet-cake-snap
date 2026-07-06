@@ -75,6 +75,9 @@ snap install --dangerous --classic ./dotnet-cake_*.snap
 # Check the version
 dotnet-cake --version
 
+# Show build and runtime info
+dotnet-cake --info
+
 # Show help
 dotnet-cake --help
 
@@ -86,6 +89,7 @@ dotnet-cake my-script.cake
 ```
 
 For a real-world example, see the integration test fixture at [`tests/build.cake`](tests/build.cake).
+For instructions on running the fixture, see [`tests/README.md`](tests/README.md).
 
 ## Upstream
 
