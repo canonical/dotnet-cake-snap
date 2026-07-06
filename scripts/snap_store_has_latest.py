@@ -73,6 +73,7 @@ def get_snap_store_version(channel):
     if not os.path.exists(socket_path):
         print(f"Error: snapd socket not found at {socket_path}. Is snapd running?", file=sys.stderr)
         return None
+    conn = None
     try:
         conn = UnixSocketHTTPConnection(socket_path)
         conn.request("GET", f"/v2/find?name={SNAP_NAME}")
@@ -104,7 +105,8 @@ def get_snap_store_version(channel):
         print(f"Error fetching Snap info: {e}", file=sys.stderr)
         return None
     finally:
-        conn.close()
+        if conn is not None:
+            conn.close()
 
 
 def main():
