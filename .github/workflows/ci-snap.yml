@@ -58,6 +58,7 @@ jobs:
 
       - name: Install snap
         run: |
+          sudo snap remove dotnet-cake || true
           sudo snap install ${{ steps.snapcraft.outputs.snap }} --dangerous --classic
 
       - name: Run integration tests
