@@ -100,11 +100,8 @@ snap install --dangerous --classic ./dotnet-cake_*.snap
 # Move into the fixture directory
 cd tests
 
-# Run the default target (build + create artifact)
+# Run the full regression suite (default target runs everything)
 dotnet-cake build.cake
-
-# Run the full regression target
-dotnet-cake --target=Full
 ```
 
 Because the snap is `classic`, the script can use the host `dotnet` SDK and other system tools.
@@ -112,7 +109,7 @@ If you also have Cake installed globally or via another source, use `snap run do
 the snap binary:
 
 ```bash
-snap run dotnet-cake --target=Full
+snap run dotnet-cake build.cake
 ```
 
 ### What the fixture validates
