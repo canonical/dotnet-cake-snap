@@ -1,0 +1,122 @@
+name: Build stable snap
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: 'Force build even if Snap Store stable has the latest version'
+        required: false
+        type: boolean
+        default: false
+      publish:
+        description: 'Publish the built snap to the Snap Store (stable channel)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      needs_build: ${{ steps.version_check.outputs.needs_build }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check if Snap Store stable has the latest Cake version
+        id: version_check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ inputs.force_build }}" = "true" ]; then
+            echo "needs_build=true" >> "$GITHUB_OUTPUT"
+          else
+            set +e
+            python3 scripts/snap_store_has_latest.py --channel stable
+            EXIT_CODE=$?
+            set -e
+            if [ $EXIT_CODE -eq 0 ]; then
+              echo "needs_build=false" >> "$GITHUB_OUTPUT"
+            elif [ $EXIT_CODE -eq 1 ]; then
+              echo "needs_build=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "Error checking version - exit code: $EXIT_CODE" >&2
+              exit $EXIT_CODE
+            fi
+          fi
+
+      - name: Skip build
+        if: steps.version_check.outputs.needs_build == 'false'
+        run: echo "Snap Store stable already has the latest Cake version. Skipping build."
+
+  build:
+    runs-on: ${{ matrix.runner }}
+    needs: check
+    if: needs.check.outputs.needs_build == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: [self-hosted, large, jammy, X64]
+            arch: amd64
+          - runner: [self-hosted, large, jammy, ARM64]
+            arch: arm64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make curl jq
+
+      - name: Generate snapcraft.yaml (latest stable release)
+        run: make fetch-version generate-snapcraft
+
+      - name: Build snap
+        id: build_snap
+        uses: canonical/action-build@v1
+        with:
+          snapcraft-args: "pack --verbose"
+
+      - name: Upload snap artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-cake-stable-snap-${{ matrix.arch }}
+          path: ${{ steps.build_snap.outputs.snap }}
+          retention-days: 30
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: [check, build]
+    if: needs.check.outputs.needs_build == 'true' && (github.event_name == 'schedule' || inputs.publish == true)
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
+
+    steps:
+      - name: Download snap artifact
+        id: download-artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dotnet-cake-stable-snap-${{ matrix.arch }}
+
+      - name: Gather filename
+        id: gather-filename
+        shell: bash
+        run: |
+          SNAP=$(ls ${{ steps.download-artifact.outputs.download-path }}/*.snap)
+          echo "snap_path=${SNAP}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish snap to Snap Store
+        uses: canonical/action-publish@v1
+        with:
+          snap: ${{ steps.gather-filename.outputs.snap_path }}
+          release: stable
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
