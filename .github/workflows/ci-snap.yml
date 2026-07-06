@@ -1,6 +1,6 @@
 name: CI snap
 
-# CI for the snap packaging. Runs on every push/PR to main.
+# CI for the snap packaging and integration tests of the snap. Runs on every PR to main.
 #
 # Steps:
 #   1. Builds the snap (latest stable Cake release) on amd64 + arm64.
@@ -16,8 +16,6 @@ name: CI snap
 #   - build-edge-snap.yml   : tracks upstream develop branch     -> edge
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -67,4 +65,4 @@ jobs:
       - name: Run integration tests
         working-directory: tests
         run: |
-          dotnet-cake build.cake --target=Full --verbosity=Diagnostic
+          dotnet-cake build.cake --verbosity=Diagnostic

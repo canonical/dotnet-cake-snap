@@ -90,9 +90,49 @@ jobs:
           path: ${{ steps.build_snap.outputs.snap }}
           retention-days: 30
 
+  test:
+    runs-on: ${{ matrix.runner }}
+    needs: [check, build]
+    if: needs.check.outputs.needs_build == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: [self-hosted, large, jammy, X64]
+            arch: amd64
+          - runner: [self-hosted, large, jammy, ARM64]
+            arch: arm64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download snap artifact
+        id: download-artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dotnet-cake-stable-snap-${{ matrix.arch }}
+
+      - name: Gather filename
+        id: gather-filename
+        shell: bash
+        run: |
+          SNAP=$(ls -1 "${{ steps.download-artifact.outputs.download-path }}"/*.snap | head -n 1)
+          echo "snap_path=${SNAP}" >> "$GITHUB_OUTPUT"
+
+      - name: Install snap
+        run: |
+          sudo snap remove dotnet-cake || true
+          sudo snap install ${{ steps.gather-filename.outputs.snap_path }} --dangerous --classic
+
+      - name: Run integration tests
+        working-directory: tests
+        run: |
+          dotnet-cake build.cake --verbosity=Diagnostic
+
   publish:
     runs-on: ubuntu-latest
-    needs: [check, build]
+    needs: [check, build, test]
     if: needs.check.outputs.needs_build == 'true' && (github.event_name == 'schedule' || inputs.publish == true)
     strategy:
       fail-fast: false
@@ -110,7 +150,7 @@ jobs:
         id: gather-filename
         shell: bash
         run: |
-          SNAP=$(ls ${{ steps.download-artifact.outputs.download-path }}/*.snap)
+          SNAP=$(ls -1 "${{ steps.download-artifact.outputs.download-path }}"/*.snap | head -n 1)
           echo "snap_path=${SNAP}" >> "$GITHUB_OUTPUT"
 
       - name: Publish snap to Snap Store
