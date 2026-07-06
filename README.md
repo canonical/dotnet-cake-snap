@@ -133,7 +133,7 @@ Three GitHub Actions workflows build and publish the snap (amd64 + arm64):
 | `build-edge-snap.yml` | daily cron + manual | `develop` branch upstream | edge | Track upstream development |
 | `ci-snap.yml` | push/PR to `main` | latest Cake release tag | edge (on merge only) | Validate changes to this repo's packaging |
 
-The scheduled workflows use `eng/snap_store_has_latest.py` to skip the build when the Snap Store
+The scheduled workflows use `scripts/snap_store_has_latest.py` to skip the build when the Snap Store
 already has the latest version. Publishing is opt-in via the `publish` workflow input (except
 `ci-snap.yml`, which publishes to edge automatically on every push to `main`).
 

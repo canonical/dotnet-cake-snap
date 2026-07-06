@@ -1,0 +1,75 @@
+name: CI snap
+
+# CI for the snap packaging. Runs on every push/PR to main.
+#
+# Steps:
+#   1. Builds the snap (latest stable Cake release) on amd64 + arm64.
+#   2. Installs it locally (--dangerous) and runs the integration tests in tests/.
+#   3. On push to main (e.g. PR merge): publishes to the edge channel.
+#      On PRs: builds + tests + uploads the artifact only; never publishes.
+#
+# Complements the scheduled workflows:
+#   - build-stable-snap.yml : tracks new upstream Cake releases  -> stable
+#   - build-edge-snap.yml   : tracks upstream develop branch     -> edge
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build snap (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: [self-hosted, large, jammy, X64]
+          - arch: arm64
+            runner: [self-hosted, large, jammy, ARM64]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make curl jq
+
+      - name: Generate snapcraft.yaml (latest stable Cake release)
+        run: make fetch-version generate-snapcraft
+
+      - name: Build snap
+        id: snapcraft
+        uses: canonical/action-build@v1
+        with:
+          snapcraft-args: "pack --verbose"
+
+      - name: Upload snap artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: snap-${{ matrix.arch }}
+          path: ${{ steps.snapcraft.outputs.snap }}
+
+      - name: Install snap
+        run: |
+          sudo snap install ${{ steps.snapcraft.outputs.snap }} --dangerous --classic
+
+      - name: Run integration tests
+        working-directory: tests
+        run: |
+          dotnet-cake build.cake --target=Full --verbosity=Diagnostic
+
+      - name: Publish to edge
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: canonical/action-publish@v1
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+        with:
+          snap: ${{ steps.snapcraft.outputs.snap }}
+          release: edge
