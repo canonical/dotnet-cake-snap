@@ -43,6 +43,8 @@ jobs:
           sudo apt-get install -y make curl jq
 
       - name: Generate snapcraft.yaml (latest stable Cake release)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: make fetch-version generate-snapcraft
 
       - name: Build snap
