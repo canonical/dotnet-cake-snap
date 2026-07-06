@@ -2,14 +2,30 @@
 
 [![Get it from the Snap Store](https://snapcraft.io/en/dark/install.svg)](https://snapcraft.io/dotnet-cake)
 
-A `classic` confined snap for the [Cake](https://cakebuild.net/) .NET build automation tool.
-The snap exposes the upstream `dotnet-cake` command as `dotnet-cake`.
+This repository contains the snap packaging for [Cake](https://cakebuild.net/) (C# Make),
+a cross-platform build automation system with a C# DSL. The snap exposes the upstream
+`dotnet-cake` command.
 
 ## What is Cake?
 
 Cake (C# Make) lets developers write build scripts in C# using a simple DSL. A typical
 Cake user creates a `build.cake` file and runs `dotnet-cake` to execute tasks such as compiling,
 testing, packaging, and deploying.
+
+## Supported Architectures
+
+- **amd64** (x86_64)
+- **arm64** (aarch64)
+
+## Repository Structure
+
+- `snap/` - Snap packaging files
+  - `local/template.snapcraft.yaml` - Template snapcraft YAML with placeholders for dynamic values
+- `.github/workflows/` - CI/CD automation
+- `scripts/` - Engineering scripts
+  - `snap_store_has_latest.py` - Version checking script for Snap Store channels
+- `tests/` - Integration test fixture
+- `Makefile` - Build automation for snap packaging
 
 ## Build
 
