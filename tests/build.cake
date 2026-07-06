@@ -129,6 +129,13 @@ Task("Clean")
     // Cleanup via globbing (bin/obj)
     var binObj = GetDirectories("./**/bin") + GetDirectories("./**/obj");
     Information("  Found {0} bin/obj directories", binObj.Count);
+    foreach (var dir in binObj)
+    {
+        Information("  Deleting {0}", dir);
+        DeleteDirectory(dir, new DeleteDirectorySettings {
+            Recursive = true, Force = true
+        });
+    }
 
     // Recreate structure
     EnsureDirectoryExists(artifactsDir);
@@ -401,13 +408,8 @@ Task("Run-App")
 
     if (!FileExists(exePath))
     {
-        // Fallback: run via dotnet run
-        Warning("Binary not found, running via 'dotnet run'.");
-        DotNetRun(projectFile.Path.FullPath, new DotNetRunSettings {
-            Configuration = configuration,
-            NoBuild = true
-        });
-        return;
+        throw new Exception($"Expected binary not found at {exePath}. " +
+                            "Build may have failed or produced output elsewhere.");
     }
 
     // 1) Normal run: runtime diagnostics inside the snap
