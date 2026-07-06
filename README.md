@@ -32,9 +32,16 @@ You can also generate the yaml only (without packing) for inspection:
 make generate-snapcraft VERSION=6.2.0
 ```
 
-### Prerequisites
+## Prerequisites
 
-```bash
+- **make** - Build automation tool
+- **snapcraft** - Snap packaging tool
+- **curl** - For fetching latest version from GitHub
+- **jq** - For parsing JSON responses
+
+Install dependencies on Ubuntu:
+
+```
 sudo apt install make snapcraft curl jq
 ```
 
