@@ -30,7 +30,7 @@ fetch-version:
 ifeq ($(VERSION),)
 	@echo "Fetching latest Cake release from GitHub..."
 	$(eval VERSION := $(shell curl -s https://api.github.com/repos/cake-build/cake/releases/latest | jq -r '.tag_name' | sed 's/^v//'))
-	@if [ -z "$(VERSION)" ]; then \
+	@if [ -z "$(VERSION)" ] || [ "$(VERSION)" = "null" ]; then \
 		echo "Error: could not fetch latest Cake version from GitHub" >&2; \
 		exit 1; \
 	fi
