@@ -89,13 +89,13 @@ parts:
           CAKE_INFORMATIONAL="${CAKE_VERSION}"
         fi
 
-        sed -i -E "s/AssemblyVersion\(\"[^\"]*\"\)/AssemblyVersion(\"${CAKE_ASM_VERSION}\")/" src/SolutionInfo.cs
-        sed -i -E "s/AssemblyFileVersion\(\"[^\"]*\"\)/AssemblyFileVersion(\"${CAKE_ASM_VERSION}\")/" src/SolutionInfo.cs
-        sed -i -E "s/AssemblyInformationalVersion\(\"[^\"]*\"\)/AssemblyInformationalVersion(\"${CAKE_INFORMATIONAL}\")/" src/SolutionInfo.cs
+        sed -i -E "s|AssemblyVersion\(\"[^\"]*\"\)|AssemblyVersion(\"${CAKE_ASM_VERSION}\")|" src/SolutionInfo.cs
+        sed -i -E "s|AssemblyFileVersion\(\"[^\"]*\"\)|AssemblyFileVersion(\"${CAKE_ASM_VERSION}\")|" src/SolutionInfo.cs
+        sed -i -E "s|AssemblyInformationalVersion\(\"[^\"]*\"\)|AssemblyInformationalVersion(\"${CAKE_INFORMATIONAL}\")|" src/SolutionInfo.cs
 
         # AssemblyDescription drives `--version` (via Comments); keep it clean.
         if grep -q 'AssemblyDescription' src/SolutionInfo.cs; then
-          sed -i -E "s/AssemblyDescription\(\"[^\"]*\"\)/AssemblyDescription(\"${CAKE_VERSION}\")/" src/SolutionInfo.cs
+          sed -i -E "s|AssemblyDescription\(\"[^\"]*\"\)|AssemblyDescription(\"${CAKE_VERSION}\")|" src/SolutionInfo.cs
         else
           echo "[assembly: System.Reflection.AssemblyDescription(\"${CAKE_VERSION}\")]" >> src/SolutionInfo.cs
         fi
