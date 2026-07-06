@@ -33,7 +33,7 @@ def get_github_latest_release(token=None):
             data = json.loads(response.read().decode())
             tag = data.get("tag_name", "").strip()
             return tag[1:] if tag.startswith("v") else tag
-    except urllib.error.URLError as e:
+    except (urllib.error.URLError, json.JSONDecodeError) as e:
         print(f"Error fetching GitHub release: {e}", file=sys.stderr)
         return None
 
@@ -49,7 +49,7 @@ def get_github_latest_commit(token=None):
             data = json.loads(response.read().decode())
             # Short SHA (7 chars) to match the snap version format used for edge.
             return data.get("sha", "")[:7]
-    except urllib.error.URLError as e:
+    except (urllib.error.URLError, json.JSONDecodeError) as e:
         print(f"Error fetching upstream commit: {e}", file=sys.stderr)
         return None
 
@@ -103,6 +103,8 @@ def get_snap_store_version(channel):
     except (json.JSONDecodeError, http.client.HTTPException) as e:
         print(f"Error fetching Snap info: {e}", file=sys.stderr)
         return None
+    finally:
+        conn.close()
 
 
 def main():
