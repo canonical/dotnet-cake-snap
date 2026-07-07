@@ -32,6 +32,8 @@ jobs:
             runner: [self-hosted, large, jammy, X64]
           - arch: arm64
             runner: [self-hosted, large, jammy, ARM64]
+          - arch: s390x
+            runner: [self-hosted, large, jammy, S390X]
 
     steps:
       - name: Checkout repository

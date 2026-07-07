@@ -16,6 +16,7 @@ testing, packaging, and deploying.
 
 - **amd64** (x86_64)
 - **arm64** (aarch64)
+- **s390x** (IBM Z / LinuxONE)
 
 ## Repository Structure
 

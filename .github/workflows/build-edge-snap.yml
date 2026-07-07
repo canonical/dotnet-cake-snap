@@ -80,6 +80,8 @@ jobs:
             arch: amd64
           - runner: [self-hosted, large, jammy, ARM64]
             arch: arm64
+          - runner: [self-hosted, large, jammy, S390X]
+            arch: s390x
 
     steps:
       - name: Checkout code
@@ -122,6 +124,8 @@ jobs:
             arch: amd64
           - runner: [self-hosted, large, jammy, ARM64]
             arch: arm64
+          - runner: [self-hosted, large, jammy, S390X]
+            arch: s390x
 
     steps:
       - name: Checkout repository
@@ -157,7 +161,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [amd64, arm64]
+        arch: [amd64, arm64, s390x]
 
     steps:
       - name: Download snap artifact
