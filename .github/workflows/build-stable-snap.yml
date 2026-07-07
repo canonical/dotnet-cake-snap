@@ -64,7 +64,7 @@ jobs:
             arch: amd64
           - runner: [self-hosted, large, jammy, ARM64]
             arch: arm64
-          - runner: [self-hosted, large, jammy, S390X]
+          - runner: [self-hosted, noble, s390x]
             arch: s390x
 
     steps:
@@ -106,7 +106,7 @@ jobs:
             arch: amd64
           - runner: [self-hosted, large, jammy, ARM64]
             arch: arm64
-          - runner: [self-hosted, large, jammy, S390X]
+          - runner: [self-hosted, noble, s390x]
             arch: s390x
 
     steps:
