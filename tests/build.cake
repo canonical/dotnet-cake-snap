@@ -49,7 +49,7 @@ var publishDir      = artifactsDir + Directory("publish");
 var packagesDir     = artifactsDir + Directory("packages");
 var reportsDir      = artifactsDir + Directory("reports");
 var scratchDir      = Directory("./_scratch");
-var outputBinDir    = Directory($"./bin/{configuration}/net8.0");
+var outputBinDir    = Directory($"./bin/{configuration}/net10.0");
 var zipFile         = artifactsDir + File("cake-test-artifact.zip");
 
 DirectoryPath[] cleanupDirs = { artifactsDir, scratchDir };
