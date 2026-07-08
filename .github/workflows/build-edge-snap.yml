@@ -76,9 +76,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: [self-hosted, large, jammy, X64]
+          - runner: [self-hosted, large, noble, X64]
             arch: amd64
-          - runner: [self-hosted, large, jammy, ARM64]
+          - runner: [self-hosted, large, noble, ARM64]
             arch: arm64
 
     steps:
@@ -118,9 +118,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: [self-hosted, large, jammy, X64]
+          - runner: [self-hosted, large, noble, X64]
             arch: amd64
-          - runner: [self-hosted, large, jammy, ARM64]
+          - runner: [self-hosted, large, noble, ARM64]
             arch: arm64
 
     steps:
@@ -144,6 +144,11 @@ jobs:
         run: |
           sudo snap remove dotnet-cake || true
           sudo snap install ${{ steps.gather-filename.outputs.snap_path }} --dangerous --classic
+
+      - name: Install .NET SDK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dotnet-sdk-10.0
 
       - name: Run integration tests
         working-directory: tests

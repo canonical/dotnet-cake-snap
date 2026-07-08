@@ -30,11 +30,7 @@ apps:
   dotnet-cake:
     command: dotnet-cake
     environment:
-      DOTNET_ROOT: $SNAP/usr/lib/dotnet
-      DOTNET_CLI_TELEMETRY_OPTOUT: "true"
       DOTNET_NOLOGO: "true"
-      LD_LIBRARY_PATH: $SNAP/usr/lib/x86_64-linux-gnu:$SNAP/usr/lib/aarch64-linux-gnu:$SNAP/usr/lib:$SNAP/lib
-      PATH: $SNAP/usr/lib/dotnet:$SNAP/usr/bin:$PATH
 
 parts:
   dotnet-cake:
@@ -50,12 +46,8 @@ parts:
     dotnet-properties:
       TargetFramework: net10.0
 
-    build-attributes:
-      - enable-patchelf
-
-    stage-packages:
-      - libicu74
-      - dotnet-sdk-10.0
+    build-packages:
+      - patchelf
 
     override-pull: |
       set -e
@@ -90,6 +82,14 @@ parts:
         # AssemblyDescription drives `--version`; it's absent from upstream SolutionInfo.cs.
         echo "[assembly: System.Reflection.AssemblyDescription(\"${CAKE_VERSION}\")]" >> src/SolutionInfo.cs
       fi
+
+    override-stage: |
+      craftctl default
+
+      # patchelf to include host's lib directories as well
+      patchelf --force-rpath --set-rpath \
+        '/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:/snap/core24/current/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}' \
+        $CRAFT_STAGE/dotnet-cake
 
     organize:
       Cake: dotnet-cake
