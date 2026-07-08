@@ -93,9 +93,9 @@ jobs:
       - name: Prepare snapcraft.yaml
         run: |
           # Use the develop commit SHA as the snap version and build from the
-          # develop branch instead of a release tag.
+          # develop branch instead of a release tag. The Makefile automatically
+          # switches source-tag to source-branch when BRANCH=develop.
           make generate-snapcraft VERSION=${{ needs.check.outputs.commit }} GRADE=devel BRANCH=develop
-          sed -i 's/source-tag: .*/source-branch: develop/' snap/snapcraft.yaml
 
       - name: Build snap
         id: build_snap
