@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// build.cake — Complex script to test breaking points of a Cake snap
+// build.cake - Complex script to test breaking points of a Cake snap
 //
 // Goal: exercise as many Cake aliases, tools and features as possible in order
 // to detect what might be missing in the packaged environment (snap):
@@ -19,10 +19,8 @@
 
 // NOTE: This addin is kept ON PURPOSE to validate that the snap can download
 // and resolve NuGet addins exactly like a normally installed Cake.
-// The addin is downloaded but its aliases are NOT called directly in the
-// script, because Cake develop (7.x) may not be ABI-compatible with the
-// latest published addin (which targets Cake.Core 6.x). The Verify-Addin
-// task checks that the addin was downloaded and its DLL is present on disk,
+// The addin is downloaded and the Verify-Addin task checks
+// that the addin was downloaded and its DLL is present on disk,
 // which proves the NuGet resolution path works inside the snap.
 #addin nuget:?package=Cake.FileHelpers&version=9.0.0
 
@@ -292,7 +290,7 @@ Task("Verify-Addin")
     .Does(() =>
 {
     // Purpose: prove that the NuGet addin (Cake.FileHelpers) was actually
-    // downloaded and resolved by Cake's addin pipeline — i.e. the snap
+    // downloaded and resolved by Cake's addin pipeline - i.e. the snap
     // behaves like a normally installed Cake.
     var addinDirs = GetDirectories("tools/Addins/Cake.FileHelpers.*");
     if (addinDirs.Count() == 0)
