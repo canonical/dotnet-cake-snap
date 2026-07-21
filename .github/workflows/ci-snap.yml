@@ -19,7 +19,7 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
-
+#   Allows manual triggering of the workflow from the Actions tab.
 jobs:
   build:
     name: Build snap (${{ matrix.arch }})
