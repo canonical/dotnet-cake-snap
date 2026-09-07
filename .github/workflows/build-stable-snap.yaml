@@ -1,17 +1,15 @@
-name: Build edge snap
+name: Build stable snap
 
 on:
-  schedule:
-    - cron: '0 0 * * *'
   workflow_dispatch:
     inputs:
       force_build:
-        description: 'Force build even if Snap Store edge has the latest commit'
+        description: 'Force build even if Snap Store stable has the latest version'
         required: false
         type: boolean
         default: false
       publish:
-        description: 'Publish the built snap to the Snap Store (edge channel)'
+        description: 'Publish the built snap to the Snap Store (stable channel)'
         required: false
         type: boolean
         default: false
@@ -21,13 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       needs_build: ${{ steps.version_check.outputs.needs_build }}
-      commit: ${{ steps.fetch_version.outputs.commit }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Check if Snap Store edge has the latest upstream commit
+      - name: Check if Snap Store stable has the latest Cake version
         id: version_check
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -36,7 +33,7 @@ jobs:
             echo "needs_build=true" >> "$GITHUB_OUTPUT"
           else
             set +e
-            python3 scripts/snap_store_has_latest.py --channel edge
+            python3 scripts/snap_store_has_latest.py --channel stable
             EXIT_CODE=$?
             set -e
             if [ $EXIT_CODE -eq 0 ]; then
@@ -49,24 +46,9 @@ jobs:
             fi
           fi
 
-      - name: Fetch latest Cake develop commit
-        id: fetch_version
-        if: steps.version_check.outputs.needs_build == 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          LATEST_COMMIT=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
-            https://api.github.com/repos/cake-build/cake/commits/develop | jq -r '.sha[:7]')
-          if [ -z "$LATEST_COMMIT" ] || [ "$LATEST_COMMIT" = "null" ]; then
-            echo "Failed to fetch latest develop commit SHA from GitHub." >&2
-            exit 1
-          fi
-          echo "commit=$LATEST_COMMIT" >> "$GITHUB_OUTPUT"
-          echo "Building from upstream develop branch, commit: $LATEST_COMMIT"
-
       - name: Skip build
         if: steps.version_check.outputs.needs_build == 'false'
-        run: echo "Snap Store edge already has the latest upstream commit. Skipping build."
+        run: echo "Snap Store stable already has the latest Cake version. Skipping build."
 
   build:
     runs-on: ${{ matrix.runner }}
@@ -90,12 +72,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y make curl jq
 
-      - name: Prepare snapcraft.yaml
-        run: |
-          # Use the develop commit SHA as the snap version and build from the
-          # develop branch instead of a release tag.
-          make generate-snapcraft VERSION=${{ needs.check.outputs.commit }} GRADE=devel BRANCH=develop
-          sed -i 's/source-tag: .*/source-branch: develop/' snap/snapcraft.yaml
+      - name: Generate snapcraft.yaml (latest stable release)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: make fetch-version generate-snapcraft
 
       - name: Build snap
         id: build_snap
@@ -106,7 +86,7 @@ jobs:
       - name: Upload snap artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dotnet-cake-edge-snap-${{ matrix.arch }}
+          name: dotnet-cake-stable-snap-${{ matrix.arch }}
           path: ${{ steps.build_snap.outputs.snap }}
           retention-days: 30
 
@@ -131,7 +111,7 @@ jobs:
         id: download-artifact
         uses: actions/download-artifact@v4
         with:
-          name: dotnet-cake-edge-snap-${{ matrix.arch }}
+          name: dotnet-cake-stable-snap-${{ matrix.arch }}
 
       - name: Gather filename
         id: gather-filename
@@ -169,7 +149,7 @@ jobs:
         id: download-artifact
         uses: actions/download-artifact@v4
         with:
-          name: dotnet-cake-edge-snap-${{ matrix.arch }}
+          name: dotnet-cake-stable-snap-${{ matrix.arch }}
 
       - name: Gather filename
         id: gather-filename
@@ -182,7 +162,7 @@ jobs:
         uses: canonical/action-publish@v1
         with:
           snap: ${{ steps.gather-filename.outputs.snap_path }}
-          release: edge
+          release: stable
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
 
@@ -198,7 +178,7 @@ jobs:
           MATTERMOST_WEBHOOK_URL: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
           MATTERMOST_CHANNEL: dotnet-gha-triggers
           TEXT: |
-            :x: **Build Edge Snap Workflow Failed**
+            :x: **Build Stable Snap Workflow Failed**
 
             **Workflow:** ${{ github.workflow }}
             **Repository:** ${{ github.repository }}
