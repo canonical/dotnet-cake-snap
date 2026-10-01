@@ -73,7 +73,7 @@ help:
 	@echo "  make                                    # Build with latest GitHub release"
 	@echo "  make VERSION=6.2.0                      # Build with specific version"
 	@echo "  make VERSION=6.2.0 GRADE=devel          # Build with custom grade"
-	@echo "  make VERSION=abc1234 GRADE=devel BRANCH=develop  # Edge build from a commit SHA"
+	@echo "  make VERSION=git-abc1234 GRADE=devel BRANCH=develop  # Edge build from a commit SHA"
 	@echo "  make clean                              # Remove generated files"
 	@echo ""
 	@echo "Variables:"
