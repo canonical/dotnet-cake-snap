@@ -40,8 +40,11 @@ make
 # Build a specific version
 make VERSION=6.2.0
 
-# Build an edge snapshot from a commit SHA (grade=devel, branch=develop)
-make VERSION=abc1234 GRADE=devel BRANCH=develop
+# Build an edge snapshot from a commit SHA (grade=devel, branch=develop).
+# Edge versions are "git.<sha>" so the version always starts with a letter and
+# never looks like a number to YAML parsers (a bare SHA such as 329e253 is
+# parsed as a float and rejected by the Snap Store review).
+make VERSION=git.abc1234 GRADE=devel BRANCH=develop
 ```
 
 You can also generate the yaml only (without packing) for inspection:

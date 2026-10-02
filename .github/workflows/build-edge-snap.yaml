@@ -20,6 +20,7 @@ jobs:
     outputs:
       needs_build: ${{ steps.version_check.outputs.needs_build }}
       commit: ${{ steps.fetch_version.outputs.commit }}
+      version: ${{ steps.fetch_version.outputs.version }}
 
     steps:
       - name: Checkout code
@@ -60,7 +61,8 @@ jobs:
             exit 1
           fi
           echo "commit=$LATEST_COMMIT" >> "$GITHUB_OUTPUT"
-          echo "Building from upstream develop branch, commit: $LATEST_COMMIT"
+          echo "version=git.$LATEST_COMMIT" >> "$GITHUB_OUTPUT"
+          echo "Building from upstream develop branch, commit: $LATEST_COMMIT (snap version: git.$LATEST_COMMIT)"
 
       - name: Skip build
         if: steps.version_check.outputs.needs_build == 'false'
@@ -92,7 +94,7 @@ jobs:
         run: |
           # Use the develop commit SHA as the snap version and build from the
           # develop branch instead of a release tag.
-          make generate-snapcraft VERSION=${{ needs.check.outputs.commit }} GRADE=devel BRANCH=develop
+          make generate-snapcraft VERSION=${{ needs.check.outputs.version }} GRADE=devel BRANCH=develop
           sed -i 's/source-tag: .*/source-branch: develop/' snap/snapcraft.yaml
 
       - name: Build snap
