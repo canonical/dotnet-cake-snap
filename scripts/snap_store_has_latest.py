@@ -4,7 +4,7 @@ Check if the Snap Store version of dotnet-cake matches the latest upstream
 Cake version for a given channel.
 
   --channel stable  : compares against the latest GitHub release tag of cake-build/cake (e.g. "6.2.0").
-  --channel edge    : compares against "git-" + the latest commit SHA (7 chars) on the upstream develop branch.
+  --channel edge    : compares against "git." + the latest commit SHA (7 chars) on the upstream develop branch.
 """
 
 import sys
@@ -20,7 +20,7 @@ import argparse
 UPSTREAM_REPO = "cake-build/cake"
 UPSTREAM_EDGE_BRANCH = "develop"
 SNAP_NAME = "dotnet-cake"
-EDGE_VERSION_PREFIX = "git-"
+EDGE_VERSION_PREFIX = "git."
 
 
 def get_github_latest_release(token=None):

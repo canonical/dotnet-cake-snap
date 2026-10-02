@@ -61,8 +61,8 @@ jobs:
             exit 1
           fi
           echo "commit=$LATEST_COMMIT" >> "$GITHUB_OUTPUT"
-          echo "version=git-$LATEST_COMMIT" >> "$GITHUB_OUTPUT"
-          echo "Building from upstream develop branch, commit: $LATEST_COMMIT (snap version: git-$LATEST_COMMIT)"
+          echo "version=git.$LATEST_COMMIT" >> "$GITHUB_OUTPUT"
+          echo "Building from upstream develop branch, commit: $LATEST_COMMIT (snap version: git.$LATEST_COMMIT)"
 
       - name: Skip build
         if: steps.version_check.outputs.needs_build == 'false'
